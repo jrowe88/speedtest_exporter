@@ -1,10 +1,14 @@
-#perform a internet speed test using SpeedTest cli
-#report results using the prometheus client
-#some parameters set from the system environment:
-#  PORT - port for reporing metrics
-#  sss - delay in seconds for running speedtest after startup (default =  15 seconds)
-#  xxx - interval in sectinos between speedtest (default = 3600 seconds)
-#  ggg - specified gateway ip (optional)
+###############################################################################
+# speedtest.py
+# copyright Jim Rowe (2020)
+###############################################################################
+#  Perform a internet speed test using SpeedTest cli
+#  Report results using the prometheus python client
+#  Some parameters set from the system environment:
+#     PORT - port for reporing metrics
+#     STARTUPDELAY_SECONDS - delay in seconds for running speedtest after startup (default =  15 seconds)
+#     INTERVAL_SECONDS - interval in sectinos between speedtest (default = 3600 seconds)
+###############################################################################
 
 from prometheus_client import (Gauge, start_http_server)
 import time, os, subprocess, json

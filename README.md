@@ -41,6 +41,7 @@ docker run -d -p 9191:9191 --env PORT=9191 --env INTERVAL_SECONDS=7200 --env STA
 2. Setting up Prometheus Scraper Config
 
 >Add the following section to the prometheus.yml configuration file:
+
 ```bash
 ...
     - job_name: speed
@@ -53,6 +54,7 @@ docker run -d -p 9191:9191 --env PORT=9191 --env INTERVAL_SECONDS=7200 --env STA
 ```
 
 >Reload the [Prometheus config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/):
+
 ```bash
 curl -X POST http://192.168.1.3:9091/-/reload
 ```

@@ -32,7 +32,7 @@ nohup python3 ./speedtest.py &>/dev/null &
 ### Examples
 1. Change default parameters
 
-Note: SpeedTest downloads and uploads many MB of data over your connection.  Do not set the interval (INTERVAL_SECONDS) to be very short unless that is your intention and you understand the consequences to your internet traffic.  Default is 3600 seconds, or every 30 minutes.
+Note: SpeedTest downloads and uploads many MB of data over your connection.  Do not set the interval (INTERVAL_SECONDS) to be very short unless that is your intention and you understand the consequences to your internet traffic.  Default is 1800 seconds, or every 30 minutes.
 
 ```bash
 docker run -d -p 9191:9191 --env PORT=9191 --env INTERVAL_SECONDS=7200 --env STARTUPDELAY_SECONDS=5 --name speedtest_exporter jrowe88/speedtest_exporter

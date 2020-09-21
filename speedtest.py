@@ -11,8 +11,13 @@
 ###############################################################################
 
 from prometheus_client import (Gauge, start_http_server)
-import time, os, subprocess, json
+from prometheus_client.twisted import MetricsResource
+import time, os, subprocess, json, threading
 from datetime import datetime
+from twisted.web.server import Site
+from twisted.web.resource import Resource
+from twisted.internet import (reactor, task)
+from indexResource import IndexResource
 
 def printLog(entry: str):    
     print(f"{datetime.now()} - {entry}")
@@ -21,8 +26,8 @@ printLog("Speedtest exporter started.")
 
 #setup run parameters
 config = {'port': 9497,
-        'interval': 3600,
-        'delay': 60}
+        'interval': 1800,
+        'delay': 30}
 
 if os.getenv("PORT") != None:
     config["port"] = int(os.getenv("PORT"))
@@ -34,8 +39,8 @@ if os.getenv("STARTUPDELAY_SECONDS") != None:
     config["delay"] = int(os.getenv("STARTUPDELAY_SECONDS"))
 
 printLog(f'exporter port={config["port"]}')
-printLog(f'startup delay={config["port"]} s')
-printLog(f'interval={config["port"]} s')
+printLog(f'startup delay={config["delay"]}s')
+printLog(f'interval={config["interval"]}s')
 
 #create metrics
 ts = Gauge('speedtest_timestamp', 'Timestamp of the speedtest in Unix time.')
@@ -59,7 +64,9 @@ def runSpeedTest() -> json:
     printLog("Running speedtest")
     complete = subprocess.run(["speedtest", "--accept-license", "--accept-gdpr", "-f", "json"], 
                             stdout=subprocess.PIPE, shell=False) 
-    return json.loads(complete.stdout)
+    results = complete.stdout
+    printLog(results)
+    return json.loads(results)
 
 #Update the metric values
 def updateValues(results: json):
@@ -68,7 +75,8 @@ def updateValues(results: json):
     ts.set(tsValue.timestamp())
     jitter.set(results["ping"]["jitter"]/1000)
     latency.set(results["ping"]["latency"]/1000)
-    packetloss.set(results["packetLoss"])
+    pl = results["packetLoss"] 
+    packetloss.set(0 if pl is None else pl)
     isp.labels(isp=results["isp"]).set(1)
     interface.labels(internalIp=results["interface"]["internalIp"],
         name=results["interface"]["name"],         
@@ -89,13 +97,33 @@ def updateValues(results: json):
     uploadBytes.set(results["upload"]["bytes"])
     uploadElapsed.set(results["upload"]["elapsed"]/1000)
 
+def checkInternetSpeed():
+    updateValues(runSpeedTest())        
+    printLog(f"Waiting for next run...waiting {config['interval']}")
+        
+def speedTestLoopFailed(failure):
+    print(failure.getBriefTraceback())
+    reactor.stop()
 
+#Service execution
 if __name__ == '__main__':
-
-    start_http_server(config["port"])
+    
+    #pause
     printLog(f"Startup delay...waiting {config['delay']}")
     time.sleep(config["delay"])
-    while True:
-        updateValues(runSpeedTest())
-        printLog(f"Waiting for next run...waiting {config['interval']}")
-        time.sleep(config["interval"])
+
+    #setup twisted web server
+    root = Resource()
+    root.putChild(b'', IndexResource())
+    root.putChild(b'metrics', MetricsResource())
+    factory = Site(root)    
+    reactor.listenTCP(int(config["port"]), factory)       
+
+    #setup and run speedtest loop
+    loop = task.LoopingCall(checkInternetSpeed)
+    ld = loop.start(config["interval"])
+    ld.addErrback(speedTestLoopFailed)
+    
+    #start the webserver and reactor loop
+    printLog(f"Starting exporter on <server>:{config['port']}/metrics")
+    reactor.run()

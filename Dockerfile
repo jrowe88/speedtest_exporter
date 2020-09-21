@@ -17,6 +17,7 @@ COPY --from=get-speedtest /usr/bin/speedtest /usr/bin/speedtest
 #exporter
 COPY *.py /usr/src/app/
 RUN pip install prometheus_client
+RUN pip install twisted
 
 #scripts and environment
 ENV INTERVAL_SECONDS=3600 \

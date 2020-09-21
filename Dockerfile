@@ -9,6 +9,8 @@ RUN apt-get install speedtest
 
 FROM python:3-slim-buster as prod
 
+ENV PYTHONUNBUFFERED=0
+
 #speedtest
 COPY --from=get-speedtest /usr/bin/speedtest /usr/bin/speedtest
 
@@ -21,4 +23,5 @@ ENV INTERVAL_SECONDS=3600 \
     STARTUPDELAY_SECONDS=60 \
     PORT=9497
 
-ENTRYPOINT ["python3", "/usr/src/app/speedtest.py"]
+ENTRYPOINT ["python3", "-u", "/usr/src/app/speedtest.py"]
+

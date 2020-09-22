@@ -22,6 +22,7 @@ from indexResource import IndexResource
 def printLog(entry: str):    
     print(f"{datetime.now()} - {entry}")
 
+loopFailed = False
 printLog("Speedtest exporter started.")
 
 #setup run parameters
@@ -75,8 +76,7 @@ def updateValues(results: json):
     ts.set(tsValue.timestamp())
     jitter.set(results["ping"]["jitter"]/1000)
     latency.set(results["ping"]["latency"]/1000)
-    pl = results["packetLoss"] 
-    packetloss.set(0 if pl is None else pl)
+    packetloss.set(results.get("packetLoss",0))
     isp.labels(isp=results["isp"]).set(1)
     interface.labels(internalIp=results["interface"]["internalIp"],
         name=results["interface"]["name"],         
@@ -103,7 +103,9 @@ def checkInternetSpeed():
         
 def speedTestLoopFailed(failure):
     print(failure.getBriefTraceback())
-    reactor.stop()
+    loopFailed = True
+    if reactor.running:
+        reactor.stop()
 
 #Service execution
 if __name__ == '__main__':
@@ -125,5 +127,6 @@ if __name__ == '__main__':
     ld.addErrback(speedTestLoopFailed)
     
     #start the webserver and reactor loop
-    printLog(f"Starting exporter on <server>:{config['port']}/metrics")
-    reactor.run()
+    if not loopFailed:
+        printLog(f"Starting exporter on <server>:{config['port']}/metrics")
+        reactor.run()

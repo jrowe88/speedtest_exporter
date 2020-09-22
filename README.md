@@ -20,19 +20,19 @@ docker run -d -p 9497:9497 --name speedtest_exporter jrowe88/speedtest_exporter
 
 2. Install [Python 3](https://www.python.org/about/gettingstarted/)
 
-3. Copy speedtest.py to your system
+3. Copy *.py files to a directory
 
 4. Run script in background
 
 ```bash
 nohup python3 ./speedtest.py &>/dev/null &
 ```
-5. Goto http://localhost:9497 to view metrics
+5. Goto http://localhost:9497/metrics to view metrics
 
 ### Examples
 1. Change default parameters
 
-Note: SpeedTest downloads and uploads many MB of data over your connection.  Do not set the interval (INTERVAL_SECONDS) to be very short unless that is your intention and you understand the consequences to your internet traffic.  Default is 1800 seconds, or every 30 minutes.
+Note: SpeedTest downloads and uploads many MB of data over your connection.  Do not set the interval (INTERVAL_SECONDS) to be very short unless that is your intention and you understand the consequences to your internet traffic.  Default is 1800 seconds, or every 30 minutes.  This examples changes port to 9191, delay to 5s and interval to 7200s.
 
 ```bash
 docker run -d -p 9191:9191 --env PORT=9191 --env INTERVAL_SECONDS=7200 --env STARTUPDELAY_SECONDS=5 --name speedtest_exporter jrowe88/speedtest_exporter
@@ -40,15 +40,15 @@ docker run -d -p 9191:9191 --env PORT=9191 --env INTERVAL_SECONDS=7200 --env STA
 
 2. Setting up Prometheus Scraper Config
 
->Add the following section to the prometheus.yml configuration file:
+>Add a section similar to the prometheus.yml configuration file (or add another target to an existing job)
 
 ```bash
 ...
     - job_name: speed
-    scrape_interval: 240s
-    metrics_path: /
-    static_configs:
-    - targets:
+      scrape_interval: 240s
+      metrics_path: /metrics
+      static_configs:
+      - targets:
         - 192.168.1.3:9497
 ...
 ```
@@ -56,7 +56,7 @@ docker run -d -p 9191:9191 --env PORT=9191 --env INTERVAL_SECONDS=7200 --env STA
 >Reload the [Prometheus config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/):
 
 ```bash
-curl -X POST http://192.168.1.3:9091/-/reload
+curl -X POST http://192.168.1.3:9497/-/reload
 ```
 
 ## Other resources

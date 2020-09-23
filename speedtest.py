@@ -49,7 +49,7 @@ jitter = Gauge('speedtest_ping_jitter_seconds','Ping jitter in seconds.')
 latency = Gauge('speedtest_ping_latency_seconds', 'Ping latency in seconds.')
 packetloss = Gauge('speedtest_packet_loss', 'Packet loss during speed test.')
 testinfo = Gauge('speedtest_test_info','Information about the server, isp, and interface used for the test, value is unix timestamp of the test.',
-    ['internalIp','name','macAddr','isVpn','externalIp','id','name','location','country','host','port','ip','isp'])
+    ['internalIp','interfaceName','macAddr','isVpn','externalIp','id','serverName','location','country','host','port','ip','isp'])
 downloadBandwidth = Gauge('speedtest_download_bytes_per_second', 'Download speed in bytes/second.')
 downloadBytes = Gauge('speedtest_download_bytes', 'Downloaded bytes.')
 downloadElapsed = Gauge('speedtest_download_seconds', 'Time to complete download in seconds.')
@@ -75,12 +75,12 @@ def updateValues(results: json):
     latency.set(results["ping"]["latency"]/1000)
     packetloss.set(results.get("packetLoss",0))    
     testinfo.labels(internalIp=results["interface"]["internalIp"],
-        name=results["interface"]["name"],         
+        interfaceName=results["interface"]["name"],         
         macAddr=results["interface"]["macAddr"],
         isVpn=results["interface"]["isVpn"],
         externalIp=results["interface"]["externalIp"],
         id=results["server"]["id"],
-        name=results["server"]["name"],
+        serverName=results["server"]["name"],
         location=results["server"]["location"],
         country=results["server"]["country"],
         host=results["server"]["host"],
